@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Point {
     x: usize,
     y: usize,
@@ -32,34 +32,30 @@ impl Image {
     }
 
     fn draw(&mut self, p1: &Point, p2: &Point) {
-	// let dx = p2.x as isize - p1.x as isize;
-	// let dy = p2.y as isize - p1.y as isize;
-	// let mut d = 2*dy - dx;
-	// let mut y = p1.y;
-
-	// for x in p1.x..=p2.x {
-        //     self.0[x][y] += 1;
-	//     if d > 0 {
-	// 	y = y + 1;
-	// 	d = d - 2*dx;
-        //     }
-	//     d = d + 2*dy
-        // }
         if p1.x == p2.x {
             let (min_y, max_y) = if p1.y < p2.y { (p1.y, p2.y) } else { (p2.y, p1.y) };
             for y in min_y..=max_y {
                 self.0[y][p1.x] += 1;
             }
-            return
-        }
-        if p1.y == p2.y {
+        } else if p1.y == p2.y {
             let (min_x, max_x) = if p1.x < p2.x { (p1.x, p2.x) } else { (p2.x, p1.x) };
             for x in min_x..=max_x {
                 self.0[p1.y][x] += 1;
             }
-            return
+        } else {
+            let (pp1, pp2) = if p1.x < p2.x { (p1, p2) } else { (p2, p1) };
+            let dy: isize;
+            if p1.y < p2.y {
+                dy = 1;
+            } else {
+                dy = -1;
+            }
+            let mut y = p1.y;
+            for x in p1.x..=p2.x {
+                self.0[y][x as usize] += 1;
+                y = (y as isize + dy) as usize
+            }
         }
-        println!("Skipped line {:?},{:?}", p1, p2);
     }
 
     fn count_ge(&self, threshold: u8) -> usize {
@@ -89,9 +85,9 @@ fn first(input: &String) {
 
     for line in input.lines() {
         let (p1, p2) = parse_line(line);
-        // if !is_on_axes(&p1, &p2) {
-        //     continue;
-        // }
+        if !is_on_axes(&p1, &p2) {
+            continue;
+        }
         img.draw(&p1, &p2);
     }
     img.render("/tmp/img.png");
@@ -101,7 +97,18 @@ fn first(input: &String) {
     // }
 }
 
-fn second(_input: &String) {
+fn second(input: &String) {
+    let mut img = Image::new(1000, 1000);
+
+    for line in input.lines() {
+        let (p1, p2) = parse_line(line);
+        img.draw(&p1, &p2);
+    }
+    img.render("/tmp/img2.png");
+    println!("Count: {}", img.count_ge(2));
+    // for row in img.0 {
+    //     println!("{:?}", row);
+    // }
 }
 
 fn main() {
