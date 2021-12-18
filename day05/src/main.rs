@@ -45,13 +45,13 @@ impl Image {
         } else {
             let (pp1, pp2) = if p1.x < p2.x { (p1, p2) } else { (p2, p1) };
             let dy: isize;
-            if p1.y < p2.y {
+            if pp1.y < pp2.y {
                 dy = 1;
             } else {
                 dy = -1;
             }
-            let mut y = p1.y;
-            for x in p1.x..=p2.x {
+            let mut y = pp1.y;
+            for x in pp1.x..=pp2.x {
                 self.0[y][x as usize] += 1;
                 y = (y as isize + dy) as usize
             }
@@ -105,14 +105,31 @@ fn second(input: &String) {
         img.draw(&p1, &p2);
     }
     img.render("/tmp/img2.png");
-    println!("Count: {}", img.count_ge(2));
+    println!("Count 2: {}", img.count_ge(2));
     // for row in img.0 {
     //     println!("{:?}", row);
     // }
+}
+
+fn second_sample(input: &String) {
+    let mut img = Image::new(10, 10);
+
+    for line in input.lines() {
+        let (p1, p2) = parse_line(line);
+        img.draw(&p1, &p2);
+    }
+    img.render("/tmp/img2-sample.png");
+    println!("Sample Count: {}", img.count_ge(2));
+    for row in img.0 {
+        println!("{:?}", row);
+    }
 }
 
 fn main() {
     let input = common::input::load_file("input.txt");
     first(&input);
     second(&input);
+
+    let sample_input = common::input::load_file("sample-input.txt");
+    second_sample(&sample_input);
 }
