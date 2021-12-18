@@ -46,15 +46,20 @@ impl Image {
 	//     d = d + 2*dy
         // }
         if p1.x == p2.x {
-            for y in p1.y..=p2.y {
-                self.0[p1.x][y] += 1;
+            let (min_y, max_y) = if p1.y < p2.y { (p1.y, p2.y) } else { (p2.y, p1.y) };
+            for y in min_y..=max_y {
+                self.0[y][p1.x] += 1;
             }
+            return
         }
         if p1.y == p2.y {
-            for x in p1.x..=p2.x {
-                self.0[x][p1.y] += 1;
+            let (min_x, max_x) = if p1.x < p2.x { (p1.x, p2.x) } else { (p2.x, p1.x) };
+            for x in min_x..=max_x {
+                self.0[p1.y][x] += 1;
             }
+            return
         }
+        println!("Skipped line {:?},{:?}", p1, p2);
     }
 
     fn count_ge(&self, threshold: u8) -> usize {
@@ -84,13 +89,16 @@ fn first(input: &String) {
 
     for line in input.lines() {
         let (p1, p2) = parse_line(line);
-        if !is_on_axes(&p1, &p2) {
-            continue;
-        }
+        // if !is_on_axes(&p1, &p2) {
+        //     continue;
+        // }
         img.draw(&p1, &p2);
     }
     img.render("/tmp/img.png");
     println!("Count: {}", img.count_ge(2));
+    // for row in img.0 {
+    //     println!("{:?}", row);
+    // }
 }
 
 fn second(_input: &String) {
