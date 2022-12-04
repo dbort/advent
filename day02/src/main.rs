@@ -22,6 +22,22 @@ impl Play {
         }
     }
 
+    fn superior(&self) -> Play {
+      match self {
+        Play::Rock => Play::Paper,
+        Play::Paper => Play::Scissors,
+        Play::Scissors => Play::Rock,
+      }
+    }
+
+    fn inferior(&self) -> Play {
+      match self {
+        Play::Rock => Play::Scissors,
+        Play::Paper => Play::Rock,
+        Play::Scissors => Play::Paper,
+      }
+    }
+
     fn versus(&self, other: Play) -> PlayResult {
         match self {
             Play::Rock => match other {
@@ -72,7 +88,25 @@ fn first(input: &String) {
     println!("Total score: {}", score_sum);
 }
 
-fn second(input: &String) {}
+fn second(input: &String) {
+    let mut score_sum: i64 = 0;
+    for line in input.lines() {
+        let parts: Vec<&str> = line.split(' ').collect();
+        let play = Play::new(parts[0]);
+        let response = match parts[1] {
+          "X" => play.inferior(), // lose
+          "Y" => play, // draw
+          "Z" => play.superior(), // win
+          _ => panic!("Unknown response string {}", parts[1]),
+        };
+        let turn = Turn {
+            play,
+            response,
+        };
+        score_sum += turn.score();
+    }
+    println!("Total score: {}", score_sum);
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
