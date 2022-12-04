@@ -7,8 +7,9 @@ main() {
     local day="$(ls -d day?? | tail -1)"
     local daynum="${day#day}"
     daynum="${daynum#0}"
-    cd "${day}/src"
-    bzn -y 2022 -d "${daynum}" > input.txt
+    local input="${day}/src/input.txt"
+    echo "> ${input}"
+    bzn -y 2022 -d "${daynum}" > "${input}"
 }
 
 main "$@"
