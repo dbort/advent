@@ -51,7 +51,7 @@ impl Pair {
 
     fn full_overlap(&self) -> bool {
         let (bigger, smaller) = {
-            if (self.first.width() > self.second.width()) {
+            if self.first.width() > self.second.width() {
                 (self.first, self.second)
             } else {
                 (self.second, self.first)
@@ -59,13 +59,24 @@ impl Pair {
         };
         bigger.min <= smaller.min && bigger.max >= smaller.max
     }
+
+    fn overlaps(&self) -> bool {
+        let (lower, higher) = {
+            if self.first.min < self.second.min {
+                (self.first, self.second)
+            } else {
+                (self.second, self.first)
+            }
+        };
+        lower.max >= higher.min
+    }
 }
 
 fn first(input: &String) {
     let mut sum: i64 = 0;
     for line in input.lines() {
         let pair = Pair::new(line);
-        println!("{:?}", pair);
+        // println!("{:?}", pair);
         if pair.full_overlap() {
             sum += 1;
         }
@@ -73,7 +84,16 @@ fn first(input: &String) {
     println!("Total: {}", sum);
 }
 
-fn second(input: &String) {}
+fn second(input: &String) {
+    let mut sum: i64 = 0;
+    for line in input.lines() {
+        let pair = Pair::new(line);
+        if pair.overlaps() {
+            sum += 1;
+        }
+    }
+    println!("Total: {}", sum);
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
