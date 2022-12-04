@@ -3,5 +3,5 @@
 set -eu
 set -o pipefail
 readonly DAY="$(ls -d day?? | tail -1)"
-cd "${DAY}"
+cd "${DAY}/src"
 cargo run
