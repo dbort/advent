@@ -47,6 +47,10 @@ impl Rucksack {
             .copied()
             .collect()
     }
+
+    fn all_items(&self) -> HashSet<char> {
+        self.c1.contents.union(&self.c2.contents).copied().collect()
+    }
 }
 
 fn first(input: &String) {
@@ -69,7 +73,33 @@ fn first(input: &String) {
     println!("Total: {}", sum);
 }
 
-fn second(input: &String) {}
+fn second(input: &String) {
+    let mut overlap_set: HashSet<char> = HashSet::new();
+    let mut sum: i64 = 0;
+    let mut line_number = 0;
+    for line in input.lines() {
+        let rs = Rucksack::new(line);
+        if line_number % 3 == 0 {
+            overlap_set = rs.all_items();
+        } else {
+            overlap_set = overlap_set.intersection(&rs.all_items()).copied().collect();
+        }
+        println!(
+            "[{}]: line {} overlap_set {:?}",
+            line_number, line, overlap_set
+        );
+        if line_number % 3 == 2 {
+            let overlap: Vec<char> = overlap_set.iter().copied().collect();
+            if overlap.len() != 1 {
+                println!("{:?} from {}", rs, line);
+                panic!("Bad overlap {:?} on line {}", overlap, line_number);
+            }
+            sum += priority(overlap[0])
+        }
+        line_number += 1;
+    }
+    println!("Total: {}", sum);
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
