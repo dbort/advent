@@ -27,7 +27,11 @@ fn first(input: &String) {
     }
 }
 
-fn second(input: &String) {}
+fn second(input: &String) {
+    for line in input.lines() {
+        println!("Index {}", process(line, 14));
+    }
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
