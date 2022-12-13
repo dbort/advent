@@ -44,11 +44,30 @@ def build(input_path: str) -> DirEnt:
       cwd.children[parts[1]] = DirEnt(size=size, isdir=isdir)
   return root
 
+def find_sizes(ent: DirEnt, sizes: list, depth: int = 0) -> int:
+  if ent.isdir:
+    sum = 0
+    for name, child in ent.children.items():
+      size = find_sizes(child, sizes, depth + 1)
+      print(("  " * depth) + f"{name}: {size}")
+      sum += size
+    print(("  " * depth) + f"= {sum}")
+    sizes.append(sum)
+    return sum
+  else:
+    return ent.size
 
 def main(input_path: str):
   root = build(input_path)
-  print(root)
+  sizes = []
+  find_sizes(root, sizes)
+  sum = 0
+  for size in sizes:
+    if size <= 100000:
+      print(f"+ {size}")
+      sum += size
+  print(f"sum <= 10000: {sum}")
 
 if __name__ == "__main__":
   # main(input_path="input.txt")
-  main(input_path="sample-input.txt")
+  main(input_path="input.txt")
