@@ -57,7 +57,7 @@ def find_sizes(ent: DirEnt, sizes: list, depth: int = 0) -> int:
   else:
     return ent.size
 
-def main(input_path: str):
+def first(input_path: str):
   root = build(input_path)
   sizes = []
   find_sizes(root, sizes)
@@ -68,6 +68,21 @@ def main(input_path: str):
       sum += size
   print(f"sum <= 10000: {sum}")
 
+def second(input_path: str):
+  root = build(input_path)
+  sizes = []
+  find_sizes(root, sizes)
+  sizes.sort()
+  fs_size = 70000000
+  update_size = 30000000
+  free_size = fs_size - sizes[-1]
+  needed_size = update_size - free_size
+  print(f"free size {free_size}, needed {needed_size}")
+  for size in sizes:
+    if size >= needed_size:
+      print(f"delete dir with size {size}")
+      break
+
 if __name__ == "__main__":
-  # main(input_path="input.txt")
-  main(input_path="input.txt")
+  first(input_path="input.txt")
+  second(input_path="input.txt")
