@@ -78,7 +78,36 @@ fn first(input: &String) {
     println!("num tailpos {}", points.len());
 }
 
-fn second(input: &String) {}
+fn simulate2(input: &String, num_knots: usize) -> HashSet<Point> {
+    let mut points: HashSet<Point> = HashSet::new();
+
+    let mut knots = vec![Point { x: 0, y: 0 }; num_knots];
+    points.insert(knots[num_knots - 1]);
+
+    for line in input.lines() {
+        let parts: Vec<&str> = line.split(' ').collect();
+        assert!(parts.len() == 2);
+        let mag = parts[1].parse::<i64>().unwrap();
+        for i in 0..mag {
+            print!("Move head {:?} {}", knots[0], parts[0]);
+            knots[0] = knots[0].movehead(parts[0]);
+            println!(" -> {:?}", knots[0]);
+
+            for k in 1..num_knots {
+                print!("Move [{k}] {:?}", knots[k]);
+                knots[k] = knots[k].follow(&knots[k - 1]);
+                println!(" -> {:?}", knots[k]);
+            }
+            points.insert(knots[num_knots - 1]);
+        }
+    }
+    points
+}
+
+fn second(input: &String) {
+    let points = simulate2(input, 10);
+    println!("pt2 num tailpos {}", points.len());
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
