@@ -56,7 +56,49 @@ fn first(input: &String) {
     println!("samples: {:?}", strength);
 }
 
-fn second(input: &String) {}
+fn update(cycle: usize, x: i64) -> bool {
+    let c = cycle as i64 % 40;
+    c >= x - 1 && c <= x + 1
+}
+
+fn render(instructions: &Vec<Instruction>) -> Vec<bool> {
+    let mut bits: Vec<bool> = Vec::new();
+    let mut cycle: usize = 0;
+    let mut x: i64 = 1;
+    for instruction in instructions {
+        match instruction {
+            Instruction::Noop => {
+                cycle += 1;
+                bits.push(update(cycle, x));
+            }
+            Instruction::AddX(val) => {
+                cycle += 1;
+                bits.push(update(cycle, x));
+                cycle += 1;
+                x += val;
+                bits.push(update(cycle, x));
+            }
+        }
+    }
+    bits
+}
+
+fn second(input: &String) {
+    let instructions = parse(input);
+    let bits = render(&instructions);
+    for row in 0..6 {
+        for col in 0..40 {
+            print!(
+                "{}",
+                match bits[row * 40 + col] {
+                    true => "#",
+                    false => ".",
+                }
+            );
+        }
+        println!("");
+    }
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
