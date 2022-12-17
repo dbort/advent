@@ -1,4 +1,6 @@
 use regex::Regex;
+use rug::Complete;
+use rug::Integer;
 use std::collections::VecDeque;
 
 #[derive(Debug)]
@@ -9,11 +11,11 @@ enum Op {
 }
 
 impl Op {
-    fn execute(&self, old: usize) -> usize {
+    fn execute(&self, old: &Integer) -> Integer {
         match self {
-            Op::Add(n) => old + n,
-            Op::Mul(n) => old * n,
-            Op::Square => old * old,
+            Op::Add(n) => Integer::from(old + n),
+            Op::Mul(n) => Integer::from(old * n),
+            Op::Square => Integer::from(old * old),
         }
     }
 }
@@ -22,10 +24,11 @@ impl Op {
 struct Monkey {
     id: usize,
     op: Op,
+    post_div: usize,
     test_div: usize,
     true_dest: usize,
     false_dest: usize,
-    items: VecDeque<usize>,
+    items: VecDeque<Integer>,
     inspections: usize,
 }
 
@@ -38,16 +41,16 @@ fn num_capture(captures: &regex::Captures, name: &str) -> usize {
 }
 
 impl Monkey {
-    fn new(spec: Vec<&str>) -> Self {
+    fn new(spec: Vec<&str>, post_div: usize) -> Self {
         assert!(spec.len() == 6);
         let re_id = Regex::new(r"Monkey (?P<id>[[:digit:]]+):").unwrap();
         let id = num_capture(&re_id.captures(spec[0]).unwrap(), "id");
 
         let re_items = Regex::new(r"items: (?P<items>[[:digit:], ]+)").unwrap();
         let item_list = str_capture(&re_items.captures(spec[1]).unwrap(), "items");
-        let items: VecDeque<usize> = item_list
+        let items: VecDeque<Integer> = item_list
             .split(", ")
-            .map(|s| s.parse::<usize>().unwrap())
+            .map(|s| Integer::parse(s).unwrap().complete())
             .collect();
 
         let re_op = Regex::new(r"new = old (?P<op>[+*]) (?P<val>\S+)").unwrap();
@@ -72,6 +75,7 @@ impl Monkey {
                 },
                 _ => panic!("Unhandled op {op_str}"),
             },
+            post_div,
             test_div,
             true_dest,
             false_dest,
@@ -87,14 +91,15 @@ impl Monkey {
         )
     }
 
-    fn inspect_one_item(&mut self) -> (usize, usize) {
+    fn inspect_one_item(&mut self) -> (Integer, usize) {
         let item = self.items.pop_front().unwrap();
-        let item = self.op.execute(item);
-        let item = item / 3;
+        let item = self.op.execute(&item);
+        let item = Integer::from(item / self.post_div);
 
-        let dest = match item % self.test_div {
-            0 => self.true_dest,
-            _ => self.false_dest,
+        let dest = if Integer::from(&item % self.test_div) == 0 {
+            self.true_dest
+        } else {
+            self.false_dest
         };
 
         self.inspections += 1;
@@ -102,25 +107,25 @@ impl Monkey {
     }
 }
 
-fn read_monkeys(input: &String) -> Vec<Monkey> {
+fn read_monkeys(input: &String, post_div: usize) -> Vec<Monkey> {
     let mut record: Vec<&str> = Vec::new();
     let mut monkeys: Vec<Monkey> = Vec::new();
     for line in input.lines() {
         if line == "" {
-            monkeys.push(Monkey::new(record));
+            monkeys.push(Monkey::new(record, post_div));
             record = Vec::new();
         } else {
             record.push(line);
         }
     }
-    monkeys.push(Monkey::new(record));
+    monkeys.push(Monkey::new(record, post_div));
     monkeys
 }
 
 fn run_round(monkeys: &mut Vec<Monkey>) {
     for i in 0..monkeys.len() {
         'monkey: loop {
-            let x: Option<(usize, usize)> = if monkeys[i].items.is_empty() {
+            let x: Option<(Integer, usize)> = if monkeys[i].items.is_empty() {
                 None
             } else {
                 Some(monkeys[i].inspect_one_item())
@@ -137,7 +142,7 @@ fn run_round(monkeys: &mut Vec<Monkey>) {
 }
 
 fn first(input: &String) {
-    let mut monkeys = read_monkeys(input);
+    let mut monkeys = read_monkeys(input, 3);
     println!("Monkeys: {:?}", monkeys);
     let num_rounds = 20;
     for _ in 1..=num_rounds {
@@ -151,13 +156,39 @@ fn first(input: &String) {
     scores.sort_unstable_by(|a, b| b.cmp(a));
     println!("  Scores: {:?}", scores);
     assert!(scores.len() >= 2);
-    println!("  Sum: {}", scores[0] * scores[1]);
+    println!("  Business: {}", scores[0] * scores[1]);
 }
 
-fn second(input: &String) {}
+fn second(input: &String) {
+    let mut monkeys = read_monkeys(input, 1);
+    let num_rounds = 10000;
+    for round in 1..=num_rounds {
+        run_round(&mut monkeys);
+        if round == 1 || round == 20 || round % 100 == 0 {
+            println!("After round {round}:");
+            for monkey in &monkeys {
+                println!(
+                    "  Monkey {} inspected items {} times.",
+                    monkey.id, monkey.inspections
+                );
+            }
+        } else if round % 10 == 0 {
+            println!("{round}...");
+        }
+    }
+    println!("After {num_rounds} rounds:");
+    for monkey in &monkeys {
+        println!("  {}", monkey.tostr());
+    }
+    let mut scores: Vec<usize> = monkeys.iter().map(|m| m.inspections).collect();
+    scores.sort_unstable_by(|a, b| b.cmp(a));
+    println!("  Scores: {:?}", scores);
+    assert!(scores.len() >= 2);
+    println!("  Business: {}", scores[0] * scores[1]);
+}
 
 fn main() {
-    let input = std::fs::read_to_string("input.txt").unwrap();
+    let input = std::fs::read_to_string("sample-input.txt").unwrap();
     first(&input);
     second(&input);
 }
