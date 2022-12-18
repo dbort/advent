@@ -59,20 +59,61 @@ impl Item {
     }
 
     fn cmp(&self, other: &Item) -> i8 {
-        0
+        match (self, other) {
+            (Item::Value(s), Item::Value(o)) => {
+                if s < o {
+                    -1
+                } else if s > o {
+                    1
+                } else {
+                    0
+                }
+            }
+            (Item::List(s), Item::List(o)) => {
+                let mut cmp = 0;
+                for i in 0..s.len() {
+                    if i >= o.len() {
+                        cmp = 1;
+                        break;
+                    }
+                    cmp = s[i].cmp(&o[i]);
+                    if cmp != 0 {
+                        break;
+                    }
+                }
+                if cmp == 0 {
+                    Item::Value(s.len()).cmp(&Item::Value(o.len()))
+                } else {
+                    cmp
+                }
+            }
+            (Item::Value(s), Item::List(o)) => Item::List(vec![Item::Value(*s)]).cmp(other),
+            (Item::List(s), Item::Value(o)) => self.cmp(&Item::List(vec![Item::Value(*o)])),
+        }
     }
 }
 
 fn first(lines: &Vec<&str>) {
+    let mut sum = 0;
     let mut i: usize = 0;
     while i < lines.len() {
         assert!(i + 1 < lines.len());
         let left = Item::parse(&mut Stream::new(lines[i]));
         println!("Left {i}: {:?}", left);
         let right = Item::parse(&mut Stream::new(lines[i + 1]));
-        println!("Right {i}: {:?}\n", right);
+        println!("Right {i}: {:?}", right);
+        let cmp = left.cmp(&right);
+        assert!(cmp != 0);
+        if cmp < 0 {
+            // In the right order
+            let pair_index = i / 3 + 1;
+            sum += pair_index;
+            println!("Pair {pair_index} in the right order");
+        }
+        println!("");
         i += 3;
     }
+    println!("\nSum {sum}");
 }
 
 fn second(lines: &Vec<&str>) {}
