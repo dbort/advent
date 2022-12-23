@@ -43,7 +43,7 @@ fn first(input: &String) {
     println!("power consumption: {}", gamma_int * epsilon_int);
 }
 
-fn second(input: &String) {
+fn second(_input: &String) {
 }
 
 fn main() {

@@ -1,3 +1,5 @@
+#[allow(dead_code, unused_variables)]
+
 #[derive(Debug)]
 struct Display {
     inputs: Vec<String>,
@@ -30,7 +32,7 @@ fn first(input: &String) {
 }
 
 fn second(input: &String) {
-    for line in input.lines() {
+    for _line in input.lines() {
     }
 }
 
