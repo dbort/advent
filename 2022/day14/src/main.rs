@@ -35,7 +35,7 @@ impl Polyline {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 enum Material {
     Air,
     Rock,
@@ -88,9 +88,13 @@ impl Map {
         self.print_window(0, MAP_HEIGHT, 0, MAP_WIDTH);
     }
 
+    fn populate_point(&mut self, point: &Point, material: Material) {
+        self.contents[point.y * MAP_WIDTH + point.x] = material;
+    }
+
     fn populate(&mut self, points: &Vec<Point>, material: Material) {
         for (i, point) in points.iter().enumerate() {
-            if (i > 0) {
+            if i > 0 {
                 let prev = points[i - 1];
                 let miny = cmp::min(prev.y, point.y);
                 let maxy = cmp::max(prev.y, point.y);
@@ -98,11 +102,40 @@ impl Map {
                 let maxx = cmp::max(prev.x, point.x);
                 for y in miny..=maxy {
                     for x in minx..=maxx {
-                        self.contents[y * MAP_WIDTH + x] = material;
+                        self.populate_point(&Point { x, y }, material);
                     }
                 }
             }
         }
+    }
+
+    fn material_at(&self, point: &Point) -> Material {
+        self.contents[point.y * MAP_WIDTH + point.x]
+    }
+
+    // Returns true if the sand came to rest; false if it falls forever.
+    fn drop_sand(&mut self) -> bool {
+        let mut loc = self.entry;
+        while loc.y + 1 < MAP_HEIGHT {
+            let mut next = loc;
+            next.y += 1;
+            if self.material_at(&next) != Material::Air {
+                next.x -= 1;
+                if self.material_at(&next) != Material::Air {
+                    next.x += 2;
+                    if self.material_at(&next) != Material::Air {
+                        // Came to rest.
+                        println!("Settled at {:?}", loc);
+                        self.populate_point(&loc, Material::Sand);
+                        self.print_around(loc.y, loc.x);
+                        return true;
+                    }
+                }
+            }
+            loc = next;
+        }
+        println!("Fell off map at {:?}", loc);
+        false
     }
 }
 
@@ -118,13 +151,19 @@ fn first(input: &String) {
         map.populate(&rock.points, Material::Rock);
     }
 
+    let mut drops = 0;
+    while map.drop_sand() {
+        drops += 1;
+    }
+    println!("Dropped {drops} before falling off");
+
     map.print_around(map.entry.y, map.entry.x);
 }
 
 fn second(input: &String) {}
 
 fn main() {
-    let input = std::fs::read_to_string("sample-input.txt").unwrap();
+    let input = std::fs::read_to_string("input.txt").unwrap();
     first(&input);
     second(&input);
 }
