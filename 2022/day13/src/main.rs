@@ -1,3 +1,6 @@
+use itertools::Itertools; // for sorted()
+use std::cmp::Ordering;
+
 #[derive(Debug)]
 enum Item {
     Value(usize),
@@ -58,53 +61,54 @@ impl Item {
         }
     }
 
-    fn cmp(&self, other: &Item) -> i8 {
+    fn cmp(&self, other: &Item) -> Ordering {
         match (self, other) {
             (Item::Value(s), Item::Value(o)) => {
                 if s < o {
-                    -1
+                    Ordering::Less
                 } else if s > o {
-                    1
+                    Ordering::Greater
                 } else {
-                    0
+                    Ordering::Equal
                 }
             }
             (Item::List(s), Item::List(o)) => {
-                let mut cmp = 0;
+                let mut cmp = Ordering::Equal;
                 for i in 0..s.len() {
                     if i >= o.len() {
-                        cmp = 1;
+                        cmp = Ordering::Greater;
                         break;
                     }
                     cmp = s[i].cmp(&o[i]);
-                    if cmp != 0 {
+                    if cmp != Ordering::Equal {
                         break;
                     }
                 }
-                if cmp == 0 {
+                if cmp == Ordering::Equal {
                     Item::Value(s.len()).cmp(&Item::Value(o.len()))
                 } else {
                     cmp
                 }
             }
-            (Item::Value(s), Item::List(o)) => Item::List(vec![Item::Value(*s)]).cmp(other),
-            (Item::List(s), Item::Value(o)) => self.cmp(&Item::List(vec![Item::Value(*o)])),
+            (Item::Value(s), Item::List(_)) => Item::List(vec![Item::Value(*s)]).cmp(other),
+            (Item::List(_), Item::Value(o)) => self.cmp(&Item::List(vec![Item::Value(*o)])),
         }
     }
 }
 
-fn first(lines: &Vec<&str>) {
+fn first(input: &String) {
     let mut sum = 0;
     let mut i: usize = 0;
+    let lines: Vec<&str> = input.lines().collect();
     while i < lines.len() {
         assert!(i + 1 < lines.len());
         let left = Item::parse(&mut Stream::new(lines[i]));
-        println!("Left {i}: {:?}", left);
+        // println!("Left {i}: {:?}", left);
         let right = Item::parse(&mut Stream::new(lines[i + 1]));
-        println!("Right {i}: {:?}", right);
+        // println!("Right {i}: {:?}", right);
         let cmp = left.cmp(&right);
-        assert!(cmp != 0);
-        if cmp < 0 {
+        assert!(cmp != Ordering::Equal);
+        if cmp == Ordering::Less {
             // In the right order
             let pair_index = i / 3 + 1;
             sum += pair_index;
@@ -116,11 +120,27 @@ fn first(lines: &Vec<&str>) {
     println!("\nSum {sum}");
 }
 
-fn second(lines: &Vec<&str>) {}
+fn second(input: &String) {
+    let input2 = input.to_owned() + "[[2]]\n[[6]]\n";
+    let packets: Vec<Item> = input2
+        .lines()
+        .filter(|s| s.len() > 0)
+        .map(|s| Item::parse(&mut Stream::new(s)))
+        .sorted_by(|a, b| a.cmp(&b))
+        .collect();
+    let packet2 = Item::parse(&mut Stream::new("[[2]]"));
+    let packet6 = Item::parse(&mut Stream::new("[[6]]"));
+    let mut decoder_key: usize = 1;
+    for (i, packet) in packets.iter().enumerate() {
+        if packet.cmp(&packet2) == Ordering::Equal || packet.cmp(&packet6) == Ordering::Equal {
+            decoder_key *= i + 1;
+        }
+    }
+    println!("\nDecoder key: {decoder_key}");
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
-    let lines: Vec<&str> = input.lines().collect();
-    first(&lines);
-    second(&lines);
+    first(&input);
+    second(&input);
 }
