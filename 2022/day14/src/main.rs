@@ -3,7 +3,7 @@ use std::cmp;
 // 528 is the largest value in the input
 const MAX_DIM: usize = 550;
 const MAP_HEIGHT: usize = MAX_DIM;
-const MAP_WIDTH: usize = MAX_DIM;
+const MAP_WIDTH: usize = 1000;
 
 #[derive(Debug, Copy, Clone)]
 struct Point {
@@ -54,6 +54,10 @@ impl Material {
 
 struct Map {
     entry: Point,
+    min_row: usize,
+    max_row: usize,
+    min_col: usize,
+    max_col: usize,
     contents: [Material; MAP_HEIGHT * MAP_WIDTH],
 }
 
@@ -103,6 +107,10 @@ impl Map {
                 for y in miny..=maxy {
                     for x in minx..=maxx {
                         self.populate_point(&Point { x, y }, material);
+                        self.min_row = cmp::min(self.min_row, y);
+                        self.max_row = cmp::max(self.max_row, y);
+                        self.min_col = cmp::min(self.min_col, x);
+                        self.max_col = cmp::max(self.max_col, x);
                     }
                 }
             }
@@ -119,15 +127,20 @@ impl Map {
         while loc.y + 1 < MAP_HEIGHT {
             let mut next = loc;
             next.y += 1;
+            assert!(
+                next.x < MAP_WIDTH && next.y < MAP_HEIGHT,
+                "next point out of bounds: {:?}",
+                next
+            );
             if self.material_at(&next) != Material::Air {
                 next.x -= 1;
                 if self.material_at(&next) != Material::Air {
                     next.x += 2;
                     if self.material_at(&next) != Material::Air {
                         // Came to rest.
-                        println!("Settled at {:?}", loc);
+                        // println!("Settled at {:?}", loc);
                         self.populate_point(&loc, Material::Sand);
-                        self.print_around(loc.y, loc.x);
+                        // self.print_around(loc.y, loc.x);
                         return true;
                     }
                 }
@@ -144,6 +157,10 @@ fn first(input: &String) {
 
     let mut map = Map {
         entry: Point { x: 500, y: 0 },
+        min_row: MAP_HEIGHT,
+        max_row: 0,
+        min_col: MAP_WIDTH,
+        max_col: 0,
         contents: [Material::Air; MAP_HEIGHT * MAP_WIDTH],
     };
 
@@ -160,7 +177,44 @@ fn first(input: &String) {
     map.print_around(map.entry.y, map.entry.x);
 }
 
-fn second(input: &String) {}
+fn second(input: &String) {
+    let rocks: Vec<Polyline> = input.lines().map(|s| Polyline::new(s)).collect();
+
+    let mut map = Map {
+        entry: Point { x: 500, y: 0 },
+        min_row: MAP_HEIGHT,
+        max_row: 0,
+        min_col: MAP_WIDTH,
+        max_col: 0,
+        contents: [Material::Air; MAP_HEIGHT * MAP_WIDTH],
+    };
+
+    for rock in rocks {
+        map.populate(&rock.points, Material::Rock);
+    }
+    println!("Rocks cover:");
+    println!("  rows {}..{}", map.min_row, map.max_row);
+    println!("  cols {}..{}", map.min_col, map.max_col);
+
+    let floor_row = map.max_row + 2;
+    let floor = Polyline::new(&format!(
+        "{},{} -> {},{}",
+        0,
+        floor_row,
+        MAP_WIDTH - 1,
+        floor_row
+    ));
+    map.populate(&floor.points, Material::Rock);
+
+    let mut drops = 0;
+    while map.material_at(&map.entry) == Material::Air {
+        map.drop_sand();
+        drops += 1;
+    }
+    println!("Dropped {drops} before topping off");
+
+    map.print_around(map.entry.y, map.entry.x);
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
