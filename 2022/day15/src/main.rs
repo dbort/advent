@@ -2,7 +2,7 @@ use regex::Regex;
 use std::cmp;
 use std::fmt;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct Point {
     x: isize,
     y: isize,
@@ -77,6 +77,17 @@ impl Sensor {
             self.location.x + self.diameter(),
         )
     }
+
+    fn x_range_for_y(&self, y: isize) -> (isize, isize) {
+        let ydist = isize::abs(self.location.y - y);
+        let diameter = self.diameter();
+        if ydist <= diameter {
+            let halfw = diameter - ydist;
+            (self.location.x - halfw, self.location.x + halfw)
+        } else {
+            (0, 0)
+        }
+    }
 }
 
 impl fmt::Display for Sensor {
@@ -96,7 +107,10 @@ fn first(input: &String, target_y: isize) {
     for sensor in &sensors {
         println!("{}", sensor);
         println!("  covers y {target_y}: {}", sensor.covers_y(target_y));
-        println!("  x range {:?}", sensor.x_range());
+        println!(
+            "  x range for {target_y}: {:?}",
+            sensor.x_range_for_y(target_y)
+        );
     }
     let covering_sensors: Vec<&Sensor> = sensors.iter().filter(|s| s.covers_y(target_y)).collect();
     println!(
@@ -107,14 +121,39 @@ fn first(input: &String, target_y: isize) {
     let mut minx = isize::MAX;
     let mut maxx = isize::MIN;
     for sensor in &covering_sensors {
-        let (x, y) = sensor.x_range();
-        minx = cmp::min(x, minx);
-        maxx = cmp::max(x, maxx);
+        let (x0, x1) = sensor.x_range_for_y(target_y);
+        if (x0, x1) != (0, 0) {
+            minx = cmp::min(x0, minx);
+            maxx = cmp::max(x1, maxx);
+        }
     }
     println!(
         "x range for target y {target_y}: {minx}..{maxx} ({})",
         maxx - minx
-    )
+    );
+    let mut covered: usize = 0;
+    let mut uncovered: usize = 0;
+    for x in minx..=maxx {
+        let p = Point { x, y: target_y };
+        let mut is_covered = false;
+        for sensor in &covering_sensors {
+            if sensor.covers(p) {
+                is_covered = true;
+            }
+            if sensor.beacon == p {
+                // In case it's possible for only one sensor to know
+                // that this beacon exists.
+                is_covered = false;
+                break;
+            }
+        }
+        if is_covered {
+            covered += 1;
+        } else {
+            uncovered += 1;
+        }
+    }
+    println!("Covered: {covered}, uncovered: {uncovered}");
 }
 
 fn second(input: &String) {}
