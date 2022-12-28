@@ -1,3 +1,7 @@
+extern crate gcollections;
+extern crate interval;
+use crate::interval::interval_set::*;
+use gcollections::ops::*;
 use regex::Regex;
 use std::cmp;
 use std::fmt;
@@ -69,13 +73,6 @@ impl Sensor {
             x: self.location.x,
             y,
         })
-    }
-
-    fn x_range(&self) -> (isize, isize) {
-        (
-            self.location.x - self.diameter(),
-            self.location.x + self.diameter(),
-        )
     }
 
     fn x_range_for_y(&self, y: isize) -> (isize, isize) {
@@ -156,16 +153,39 @@ fn first(input: &String, target_y: isize) {
     println!("Covered: {covered}, uncovered: {uncovered}");
 }
 
-fn second(input: &String) {}
+fn second(input: &String, max_loc: isize) {
+    let sensors: Vec<Sensor> = input.lines().map(|s| Sensor::new(s)).collect();
+    for y in 0..=max_loc {
+        let mut intervals = vec![(0 as isize, 0 as isize)].to_interval_set();
+        for sensor in &sensors {
+            let (x0, x1) = sensor.x_range_for_y(y);
+            if (x0, x1) == (0, 0) {
+                continue;
+            }
+            intervals = intervals.union(&vec![(x0, x1)].to_interval_set());
+        }
+        intervals = intervals.intersection(&vec![(0, max_loc)].to_interval_set());
+        if intervals.size() != max_loc as usize + 1 {
+            println!("y {y}: {:?}", intervals);
+            break;
+            // y 3017867: { lb: 0, ub: 3068580 }, { lb: 3068582, ub: 4000000 }], size: 4000000
+            // >>> 3068581 * 4000000 + 3017867
+            // 12274327017867
+
+            // sample
+            // y 11: { lb: 0, ub: 13 }, { lb: 15, ub: 20 }], size: 20
+        }
+    }
+}
 
 fn main() {
-    const USE_SAMPLE: bool = false;
-    let (input_file, target_y) = if USE_SAMPLE {
-        ("sample-input.txt", 10)
+    const USE_SAMPLE: bool = true;
+    let (input_file, target_y, max_loc) = if USE_SAMPLE {
+        ("sample-input.txt", 10, 20)
     } else {
-        ("input.txt", 2000000)
+        ("input.txt", 2000000, 4000000)
     };
     let input = std::fs::read_to_string(input_file).unwrap();
     first(&input, target_y);
-    second(&input);
+    second(&input, max_loc);
 }
