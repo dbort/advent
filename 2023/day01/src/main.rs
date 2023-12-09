@@ -68,32 +68,41 @@ fn second(input: &String) {
     let mut sum: u64 = 0;
     for linei in input.lines() {
         let mut first: u32 = 10;
-        let mut last: u32 = 10;
         let mut line: &str = linei;
-        while line.len() > 0 {
-            let mut d: u32 = 10;
+        'outer: while line.len() > 0 {
             let c = line.chars().nth(0).unwrap();
             if c.is_digit(10) {
-                d = c.to_digit(10).unwrap();
-                line = &line[1..];
+                first = c.to_digit(10).unwrap();
+                break;
             } else {
                 for n in &numbers {
                     if line.starts_with(&n.word) {
-                        d = n.digit as u32;
-                        line = &line[n.word.len()..];
-                        break;
+                        first = n.digit as u32;
+                        break 'outer;
                     }
                 }
             }
-            if d < 10 {
-                if first > 9 {
-                    first = d;
-                }
-                last = d;
+            line = &line[1..];
+        }
+
+        let mut last: u32 = 10;
+        'outer: for i in (0..linei.len()).rev() {
+            line = &linei[i..];
+            println!("<{}>", line);
+            let c = line.chars().nth(0).unwrap();
+            if c.is_digit(10) {
+                last = c.to_digit(10).unwrap();
+                break 'outer;
             } else {
-                line = &line[1..];
+                for n in &numbers {
+                    if line.starts_with(&n.word) {
+                        last = n.digit as u32;
+                        break 'outer;
+                    }
+                }
             }
         }
+
         assert!(first < 10 && last < 10, "Didn't find numbers for {}", line);
         let val = first as u64 * 10 + last as u64;
         println!("{} -> {}", linei, val);
