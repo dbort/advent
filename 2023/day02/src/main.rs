@@ -1,3 +1,5 @@
+use std::cmp;
+
 #[derive(Debug)]
 struct Round {
     red: usize,
@@ -67,7 +69,24 @@ fn first(input: &String) {
     println!("Total: {}", sum);
 }
 
-fn second(input: &String) {}
+fn second(input: &String) {
+    let mut sum: usize = 0;
+    'outer: for line in input.lines() {
+        let (game, rounds) = parse_game(line);
+        let mut min_red = 0;
+        let mut min_green = 0;
+        let mut min_blue = 0;
+        for round in &rounds {
+            min_red = cmp::max(min_red, round.red);
+            min_green = cmp::max(min_green, round.green);
+            min_blue = cmp::max(min_blue, round.blue);
+        }
+        let power = min_red * min_green * min_blue;
+        // println!("{:?} -> {}r {}g {}b", rounds, min_red, min_green, min_blue);
+        sum += power;
+    }
+    println!("Total: {}", sum);
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
