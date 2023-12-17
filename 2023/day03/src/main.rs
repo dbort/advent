@@ -33,7 +33,7 @@ fn scrape_line(line: &str, linenum: usize) -> (Vec<PlacedItem>, Vec<PlacedItem>)
                     line: linenum,
                     col: item_col,
                 });
-                // println!("{:?}", numbers.last().unwrap());
+                println!("{:?}", numbers.last().unwrap());
                 item_col = 0;
                 value = 0;
             }
@@ -43,10 +43,18 @@ fn scrape_line(line: &str, linenum: usize) -> (Vec<PlacedItem>, Vec<PlacedItem>)
                     line: linenum,
                     col: col,
                 });
-                // println!("{:?}", symbols.last().unwrap());
+                println!("{:?}", symbols.last().unwrap());
             }
         }
         col += 1;
+    }
+    if value > 0 {
+        numbers.push(PlacedItem {
+            item: Item::Number(value),
+            line: linenum,
+            col: item_col,
+        });
+        println!("{:?} (EOL)", numbers.last().unwrap());
     }
     (numbers, symbols)
 }
@@ -98,7 +106,7 @@ fn first(input: &String) {
 fn second(input: &String) {}
 
 fn main() {
-    let input = std::fs::read_to_string("sample-input.txt").unwrap();
+    let input = std::fs::read_to_string("input.txt").unwrap();
     first(&input);
     second(&input);
 }
