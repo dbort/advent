@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]
 enum Item {
@@ -103,7 +103,54 @@ fn first(input: &String) {
     println!("First total: {}", sum);
 }
 
-fn second(input: &String) {}
+fn second(input: &String) {
+    let mut numbers: Vec<PlacedItem> = vec![];
+    let mut symbols: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
+    let mut linenum: usize = 1;
+    for line in input.lines() {
+        let (mut numbers_1, symbols_1) = scrape_line(line, linenum);
+        numbers.append(&mut numbers_1);
+        for s in symbols_1 {
+            match s.item {
+                Item::Symbol(c) => {
+                    if c == '*' {
+                        symbols.insert((s.line, s.col), (0, 1));
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+        linenum += 1;
+    }
+
+    for n in &numbers {
+        let value = match n.item {
+            Item::Number(n) => n,
+            _ => unreachable!(),
+        };
+        let col_end = n.col + value.to_string().len() - 1;
+        let mut adjsyms: HashSet<(usize, usize)> = HashSet::new();
+        for col in (n.col - 1)..=(col_end + 1) {
+            for line in (n.line - 1)..=(n.line + 1) {
+                if symbols.contains_key(&(line, col)) {
+                    adjsyms.insert((line, col));
+                }
+            }
+        }
+        for (line, col) in adjsyms {
+            let (count, ratio) = symbols.get(&(line, col)).unwrap();
+            *symbols.get_mut(&(line, col)).unwrap() = (count + 1, ratio * value);
+        }
+    }
+
+    let mut sum: usize = 0;
+    for ((_, _), (count, ratio)) in &symbols {
+        if *count == 2 {
+            sum += ratio;
+        }
+    }
+    println!("Second sum: {}", sum);
+}
 
 fn main() {
     let input = std::fs::read_to_string("input.txt").unwrap();
