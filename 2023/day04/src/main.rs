@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]
 struct Card {
@@ -55,11 +55,37 @@ fn part1(input: &String) -> i64 {
 }
 
 fn part2(input: &String) -> i64 {
-    -1
+    let mut cards: HashMap<usize, Card> = HashMap::new();
+    for line in input.lines() {
+        let card = Card::parse(line);
+        cards.insert(card.number, card);
+    }
+    let mut won_cards: Vec<&Card> = vec![];
+    for (_, card) in &cards {
+        won_cards.push(card);
+        let score = {
+            let nw = card.num_winners();
+            if nw > 0 {
+                usize::pow(2, nw as u32 - 1)
+            } else {
+                0
+            }
+        };
+        print!("card {} won {}: ", card.number, score);
+        for i in card.number + 1..=card.number + score {
+            if cards.contains_key(&i) {
+                print!("{}, ", i);
+                won_cards.push(cards.get(&i).unwrap());
+            }
+        }
+        print!("\n");
+    }
+    // need to play all cards first, counting winners, then score??
+    won_cards.len() as i64
 }
 
 fn main() {
-    let input = std::fs::read_to_string("input.txt").unwrap();
+    let input = std::fs::read_to_string("sample-input.txt").unwrap();
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
 }
