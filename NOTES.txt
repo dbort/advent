@@ -1,0 +1,20 @@
+Parsing a whole line like "Card 1: 17  1 24 40  8 | 55 27 89 9 64"
+
+    fn parse(line: &str) -> Self {
+        let (card, (winners, have)) = line
+            .strip_prefix("Card ")
+            .and_then(|s| s.split_once(':'))
+            .and_then(|(card, rest)| Option::Some((card, rest.split_once('|').unwrap())))
+            .unwrap();
+        Self {
+            number: card.parse::<usize>().unwrap(),
+            winners: winners
+                .split_whitespace()
+                .map(|x| x.parse::<usize>().unwrap())
+                .collect(),
+            have: have
+                .split_whitespace()
+                .map(|x| x.parse::<usize>().unwrap())
+                .collect(),
+        }
+    }
