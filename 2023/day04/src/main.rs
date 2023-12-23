@@ -1,4 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    rc::Rc,
+};
 
 #[derive(Debug)]
 struct Card {
@@ -55,37 +58,32 @@ fn part1(input: &String) -> i64 {
 }
 
 fn part2(input: &String) -> i64 {
-    let mut cards: HashMap<usize, Card> = HashMap::new();
+    let mut original_cards: HashMap<usize, Rc<Card>> = HashMap::new();
+    let mut cards_to_play: Vec<Rc<Card>> = vec![];
     for line in input.lines() {
-        let card = Card::parse(line);
-        cards.insert(card.number, card);
+        let card = Rc::new(Card::parse(line));
+        original_cards.insert(card.number, Rc::clone(&card));
+        cards_to_play.push(card);
     }
-    let mut won_cards: Vec<&Card> = vec![];
-    for (_, card) in &cards {
-        won_cards.push(card);
-        let score = {
-            let nw = card.num_winners();
-            if nw > 0 {
-                usize::pow(2, nw as u32 - 1)
-            } else {
-                0
-            }
-        };
-        print!("card {} won {}: ", card.number, score);
-        for i in card.number + 1..=card.number + score {
-            if cards.contains_key(&i) {
-                print!("{}, ", i);
-                won_cards.push(cards.get(&i).unwrap());
+    let mut i: usize = 0;
+    while i < cards_to_play.len() {
+        let card = cards_to_play.get(i).unwrap();
+        let nw = card.num_winners();
+        // print!("card {} won {}: ", card.number, nw);
+        for i in card.number + 1..=card.number + nw {
+            if original_cards.contains_key(&i) {
+                // print!("{}, ", i);
+                cards_to_play.push(Rc::clone(original_cards.get(&i).unwrap()));
             }
         }
-        print!("\n");
+        // print!("\n");
+        i += 1;
     }
-    // need to play all cards first, counting winners, then score??
-    won_cards.len() as i64
+    cards_to_play.len() as i64
 }
 
 fn main() {
-    let input = std::fs::read_to_string("sample-input.txt").unwrap();
+    let input = std::fs::read_to_string("input.txt").unwrap();
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
 }
