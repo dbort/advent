@@ -1,4 +1,12 @@
-Parsing a whole line like "Card 1: 17  1 24 40  8 | 55 27 89 9 64"
+Parse a string with numbers into ints:
+
+    let parts: Vec<usize> = line
+            .split_whitespace()
+            .map(|x| x.parse::<usize>().unwrap())
+            .collect();
+
+
+Parse a whole line like "Card 1: 17  1 24 40  8 | 55 27 89 9 64"
 
     fn parse(line: &str) -> Self {
         let (card, (winners, have)) = line
@@ -18,3 +26,8 @@ Parsing a whole line like "Card 1: 17  1 24 40  8 | 55 27 89 9 64"
                 .collect(),
         }
     }
+
+Find an element of a vector that matches a condition:
+
+    let mapping: &ElementMapping =
+            mappings.iter().find(|&m| m.from == elem).unwrap();

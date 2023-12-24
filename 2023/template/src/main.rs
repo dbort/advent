@@ -7,6 +7,7 @@ fn part1(input: &String) -> i64 {
 }
 
 fn part2(input: &String) -> i64 {
+    let _ = input;
     -1
 }
 
