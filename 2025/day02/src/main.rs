@@ -47,9 +47,47 @@ fn part1(input: &String) -> i64 {
     total.try_into().unwrap()
 }
 
+fn split_string(s: &str, part_size: usize) -> Vec<String> {
+    s.as_bytes()
+        .chunks(part_size)
+        .map(|chunk| {
+            String::from_utf8(chunk.to_vec()).unwrap() // assume 7-bit ascii
+        })
+        .collect()
+}
+
+fn are_all_identical(vec: &Vec<String>) -> bool {
+    if vec.len() <= 1 {
+        return true;
+    }
+    let first = &vec[0];
+    vec.iter()
+        .skip(1) // skip first
+        .all(|e| e == first)
+}
+
 fn part2(input: &String) -> i64 {
-    let _ = input;
-    -1
+    let ranges = parse_ranges(input);
+    let mut total = 0;
+    for range in ranges {
+        // println!("{:?}", range);
+        for i in range {
+            let s = i.to_string();
+            let num_digits = (i as f32).log10() as u32 + 1;
+            // println!("{} has {} digits", i, num_digits);
+            for j in 1..num_digits {
+                if num_digits % j == 0 {
+                    // println!("can split {} into parts of size {}", i, j);
+                }
+                if are_all_identical(&split_string(&s, j as usize)) {
+                    println!("hit: {} with part size {}", i, j);
+                    total += i;
+                    break;
+                }
+            }
+        }
+    }
+    total.try_into().unwrap()
 }
 
 fn main() {
