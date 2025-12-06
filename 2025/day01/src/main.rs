@@ -61,8 +61,48 @@ fn part1(input: &String) -> i64 {
 }
 
 fn part2(input: &String) -> i64 {
-    let _ = input;
-    -1
+    let steps = parse_steps(input);
+    let mut dial: i64 = 50;
+    let mut zero_count = 0;
+    for step in &steps {
+        let old_zero_count = zero_count;
+        match &step.direction {
+            Direction::Left => {
+                let mut distance = step.distance as i64;
+                let to_next_zero = dial;
+                if to_next_zero != 0 {
+                    if distance >= to_next_zero {
+                        distance -= to_next_zero;
+                        dial = 0;
+                        zero_count += 1;
+                    }
+                }
+                zero_count += distance / 100;
+                dial -= distance as i64;
+                while dial < 0 {
+                    dial += 100;
+                }
+            }
+            Direction::Right => {
+                let mut distance = step.distance as i64;
+                let to_next_zero = 100 - dial;
+                if to_next_zero != 0 {
+                    if distance >= to_next_zero {
+                        distance -= to_next_zero;
+                        dial = 0;
+                        zero_count += 1;
+                    }
+                }
+                zero_count += distance / 100;
+                dial += distance;
+                while dial >= 100 {
+                    dial -= 100;
+                }
+            }
+        };
+        println!("{:?} -> {} (+{})", step, dial, zero_count - old_zero_count);
+    }
+    zero_count.into()
 }
 
 fn main() {
