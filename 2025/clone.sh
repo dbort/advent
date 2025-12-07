@@ -3,7 +3,11 @@
 set -eu
 set -o pipefail
 
+readonly WORKSPACE_TOML='../Cargo.toml'
+
+
 main() {
+    local year="$(basename $PWD)"
     local day="$(ls -d day?? | tail -1)"
     local daynum="${day#day}"
     daynum="${daynum#0}"
@@ -14,7 +18,17 @@ main() {
         cp -R template "${newday}/"
         sed "s/{DAY}/${newday}/" < "${newday}/Cargo.toml" > "/tmp/${newday}"
         mv "/tmp/${newday}" "${newday}/Cargo.toml"
-        ./fetch.sh || "Fetch failed"
+
+        awk -v new_member="${year}/${newday}" '
+        /<INSERT_MEMBER/ {
+            print "  \"" new_member "\",";
+            print;
+            next;
+        }
+        { print }
+        ' "${WORKSPACE_TOML}" > /tmp/$$-clone && mv /tmp/$$-clone "${WORKSPACE_TOML}"
+
+        ./fetch.sh || echo "Fetch failed"
     )
 }
 
