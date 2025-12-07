@@ -27,9 +27,31 @@ fn part1(input: &String) -> i64 {
     sum
 }
 
+// ndigits = 8
+// 1891111119 (len 10)
+// 0..3 -> 0 .. len - (digits_left - 1)
+// --> pos 1 val 8, left = 7
+// pos+1 .. (len - pos+1) - (left - 1)
 fn part2(input: &String) -> i64 {
-    let _ = input;
-    -1
+    let mut sum: i64 = 0;
+    let ndigits = 12;
+    for line in input.lines() {
+        let digits = parse_digits(line);
+        let mut value = 0;
+        let mut pos = 0;
+        println!("in: {}", line);
+        for digits_left in (1..=ndigits).rev() {
+            let avail = digits.len() - pos;
+            let look = avail - digits_left + 1;
+            let mp = max_position(&digits[pos..pos + look]) + pos;
+            pos = mp + 1;
+            value = value * 10 + digits[mp] as i64;
+            print!("[{}]:{}, ", mp, digits[mp]);
+        }
+        println!("\nval: {}", value);
+        sum += value as i64;
+    }
+    sum
 }
 
 fn main() {
