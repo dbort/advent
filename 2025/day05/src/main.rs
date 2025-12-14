@@ -54,8 +54,34 @@ fn part1(input: &String) -> i64 {
 }
 
 fn part2(input: &String) -> i64 {
-    let _ = input;
-    -1
+    let (nonmut_ranges, _) = parse_input(input);
+    let mut ranges = nonmut_ranges.clone();
+    ranges.sort_unstable_by_key(|r| *r.start());
+    let mut p = 0;
+    for i in 1..ranges.len() {
+        if ranges[i].start() >= ranges[p].start() && ranges[i].start() <= ranges[p].end() {
+            ranges[p] = RangeInclusive::new(
+                *ranges[p].start(),
+                std::cmp::max(*ranges[p].end(), *ranges[i].end()),
+            );
+            ranges[i] = RangeInclusive::new(0, 0);
+        } else {
+            p = i;
+        }
+    }
+    let mut count = 0;
+    for range in ranges {
+        println!(
+            "{}..={} ({})",
+            range.start(),
+            range.end(),
+            range.end() - range.start() + 1
+        );
+        if (*range.start(), *range.end()) != (0, 0) {
+            count += range.end() - range.start() + 1;
+        }
+    }
+    count as i64
 }
 
 fn main() {
