@@ -6,5 +6,6 @@ members = [
   "2025/day03",
   "2025/day04",
   "2025/day05",
+  "2025/day06",
   # <INSERT_MEMBER
 ]
