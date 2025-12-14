@@ -4,7 +4,7 @@
 		{
 			"label": "run.sh",
 			"type": "shell",
-			"command": "cd 2022 && ./run.sh",
+			"command": "cd 2025 && ./run.sh",
 			"problemMatcher": [],
 			"group": {
 				"kind": "build",
