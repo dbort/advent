@@ -34,6 +34,7 @@ fn parse(input: &str) -> Vec<Vec3> {
 pub struct Circuits {
     pub box_to_circuit: Vec<usize>,
     pub boxes_in_circuit: Vec<Vec<usize>>,
+    num_circuits: usize,
 }
 
 impl Circuits {
@@ -41,6 +42,7 @@ impl Circuits {
         Circuits {
             box_to_circuit: (0..num_boxes).collect(),
             boxes_in_circuit: (0..num_boxes).map(|i| vec![i]).collect(),
+            num_circuits: num_boxes,
         }
     }
 
@@ -48,6 +50,7 @@ impl Circuits {
         let mut c1 = self.box_to_circuit[bi1];
         let mut c2 = self.box_to_circuit[bi2];
         if c1 != c2 {
+            self.num_circuits -= 1;
             if c1 > c2 {
                 (c1, c2) = (c2, c1);
             }
@@ -120,7 +123,35 @@ fn part1(input: &String) -> i64 {
 }
 
 fn part2(input: &String) -> i64 {
-    let _ = input;
+    let boxes = parse(input);
+    // (distance, (box-a-index, box-b-index))
+    let distances = {
+        let mut tmpdist: Vec<(f64, (usize, usize))> = vec![];
+        for (i, bi) in boxes.iter().enumerate() {
+            for (j, bj) in boxes.iter().enumerate() {
+                if j > i {
+                    tmpdist.push((bi.distance_to(*bj), (i, j)));
+                }
+            }
+        }
+        tmpdist.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        tmpdist
+    };
+
+    let mut circuits = Circuits::new(boxes.len());
+    for (d, (b1i, b2i)) in distances.iter() {
+        println!(
+            "dist {} [{}]{:?} .. [{}]{:?}",
+            d, b1i, boxes[*b1i], b2i, boxes[*b2i]
+        );
+        let old_num = circuits.num_circuits;
+        circuits.connect_boxes(*b1i, *b2i);
+        println!("num_circuits {} => {}", old_num, circuits.num_circuits);
+        if circuits.num_circuits == 1 {
+            println!("all circuits connected");
+            return (boxes[*b1i].x * boxes[*b2i].x) as i64;
+        }
+    }
     -1
 }
 
